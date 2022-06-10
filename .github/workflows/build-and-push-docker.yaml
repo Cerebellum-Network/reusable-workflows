@@ -30,6 +30,11 @@ on:
       DOCKERHUB_TOKEN:
         required: true
 
+    outputs:
+      version:
+        description: Docker image tag.
+        value: ${{ jobs.build-docker-image-and-push-to-registers.outputs.version }}
+
 jobs:
   build-docker-image-and-push-to-registers:
     name: Build docker image, push to both aws and dockerhub registers.

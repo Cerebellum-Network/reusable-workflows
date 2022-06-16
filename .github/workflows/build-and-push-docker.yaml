@@ -20,6 +20,10 @@ on:
       image:
         required: true
         type: string
+      registry:
+        required: false
+        default: crb-${{ github.event.repository.name }}
+        type: string
     secrets:
       ORG_AWS_ACCESS_KEY_ID:
         required: true
@@ -66,7 +70,7 @@ jobs:
       - name: Build and push docker image
         env:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-          ECR_REPOSITORY: crb-${{ github.event.repository.name }}
+          ECR_REPOSITORY: ${{ intputs.registry }}
         uses: docker/build-push-action@v2
         with:
           context: ./

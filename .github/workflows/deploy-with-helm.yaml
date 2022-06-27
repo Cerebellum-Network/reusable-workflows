@@ -12,17 +12,10 @@ on:
         required: true
         type: string
 
-      helm-version:
-        required: true
-        type: string
       helm-repo-path:
         required: true
         type: string
       helm-release:
-        required: true
-        type: string
-
-      kubectl-version:
         required: true
         type: string
 
@@ -40,6 +33,10 @@ on:
     secrets:
       TRIGGER_GITHUB_TOKEN:
         required: true
+      HELM_VERSION:
+        required: true
+      KUBECTL_VERSION:
+        required: true
 
 jobs:
   deploy:
@@ -52,10 +49,10 @@ jobs:
           token: ${{ secrets.TRIGGER_GITHUB_TOKEN }}
       - uses: azure/setup-helm@v1
         with:
-          version: ${{ inputs.helm-version }}
+          version: ${{ secrets.HELM_VERSION }}
       - uses: azure/setup-kubectl@v1
         with:
-          version: ${{ inputs.kubectl-version }}
+          version: ${{ secrets.KUBECTL_VERSION }}
       - name: Deploy
         env:
           HELM_RELEASE: ${{ inputs.helm-release }}

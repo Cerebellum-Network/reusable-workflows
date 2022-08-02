@@ -19,6 +19,10 @@ on:
       image:
         required: false
         type: string
+      file:
+        required: false
+        type: string
+        default: ./Dockerfile
 
       environment:
         required: true
@@ -86,7 +90,7 @@ jobs:
         uses: docker/build-push-action@v2
         with:
           context: ./
-          file: ./Dockerfile
+          file: ${{ inputs.file }}
           push: true
           no-cache: true
           tags: |
@@ -102,7 +106,7 @@ jobs:
         uses: docker/build-push-action@v2
         with:
           context: ./
-          file: ./Dockerfile
+          file: ${{ inputs.file }}
           push: true
           no-cache: true
           tags: |

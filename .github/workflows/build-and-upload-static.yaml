@@ -32,6 +32,10 @@ on:
         default: true
         description: Build static files?
         type: boolean
+      client_path:
+        required: false
+        default: "."
+        type: string
 
       inject_ssm_secrets:
         required: false
@@ -73,9 +77,10 @@ jobs:
       - name: Restore cache
         uses: actions/cache@v2
         with:
-          path: 'node_modules'
-          key: ${{ runner.os }}-modules-${{ hashFiles('yarn.lock') }}
+          path: '${{ inputs.client_path }}/node_modules'
+          key: ${{ runner.os }}-modules-${{ hashFiles('${{ inputs.client_path }}/yarn.lock') }}
       - name: Install packages
+        working-directory: ${{ inputs.client_path }}
         run: ${{ inputs.install_packages_command }}
 
       - name: Inject REACT_APP_CHAIN_ID
@@ -142,6 +147,7 @@ jobs:
           env_variable_name: "INFURA_PROJECT_ID"
 
       - name: Build
+        working-directory: ${{ inputs.client_path }}
         env:
           CI: false
         run: ${{ inputs.build_command }}

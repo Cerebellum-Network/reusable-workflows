@@ -27,6 +27,11 @@ on:
         required: true
         description: Path to files to upload
         type: string
+      build_static_files:
+        required: false
+        default: true
+        description: Build static files?
+        type: boolean
 
     secrets:
       NETWORK_AWS_ACCESS_KEY_ID:
@@ -42,6 +47,7 @@ on:
 
 jobs:
   build-static-files:
+    if: ${{ inputs.build_static_files }}
     name: Build static files
     runs-on: ${{ fromJSON(inputs.runs-on) }}
     container:
@@ -72,14 +78,21 @@ jobs:
   deploy-static-files:
     name: Deploy static files
     needs: build-static-files
+    if: always() && (needs.build-static-files.result == 'success' || needs.build-static-files.result == 'skipped')
     runs-on: ${{ fromJSON(inputs.runs-on) }}
     container:
       image: ${{ inputs.deploy_container }}
     steps:
       - name: Restore build
+        if: ${{ inputs.build_static_files }}
         uses: actions/download-artifact@v2
         with:
           name: build
+          path: build
+      - name: Checkout repository
+        if: ${{ !inputs.build_static_files }}
+        uses: actions/checkout@v3
+        with:
           path: build
       - name: Install aws-cli
         env:

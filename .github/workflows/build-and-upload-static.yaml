@@ -50,7 +50,7 @@ jobs:
       - name: Install system packages
         run: |
           apt update
-          apt install -y python3 libpq-dev make build-essential
+          apt install -y python3 libpq-dev make build-essential git
       - name: Restore cache
         uses: actions/cache@v2
         with:

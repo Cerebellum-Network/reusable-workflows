@@ -27,6 +27,7 @@ on:
         required: true
         description: Path to files to upload
         type: string
+
     secrets:
       NETWORK_AWS_ACCESS_KEY_ID:
         required: true
@@ -97,5 +98,5 @@ jobs:
           S3_BUCKET: ${{ secrets.S3_BUCKET_NAME }}
           CF_DISTRIBUTION_ID: ${{ secrets.CF_DISTRIBUTION_ID }}
         run: |
-          aws s3 sync --metadata-directive="REPLACE" build/ s3://${S3_BUCKET}
+          aws s3 sync --metadata-directive="REPLACE" --exclude ".*" build/ s3://${S3_BUCKET}
           aws cloudfront create-invalidation --distribution-id ${CF_DISTRIBUTION_ID} --paths "/*"

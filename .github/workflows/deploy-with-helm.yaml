@@ -64,5 +64,5 @@ jobs:
             --set image.tag=${TAG} \
             --set global.image.tag=${TAG} \
             --debug --atomic --cleanup-on-fail \
-            --timeout 5m \
+            --timeout 10m \
             -n ${NAMESPACE}

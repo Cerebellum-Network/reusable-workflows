@@ -202,4 +202,6 @@ jobs:
           CF_DISTRIBUTION_ID: ${{ secrets.CF_DISTRIBUTION_ID }}
         run: |
           aws s3 sync --metadata-directive="REPLACE" --exclude ".*" build/ s3://${S3_BUCKET}
-          aws cloudfront create-invalidation --distribution-id ${CF_DISTRIBUTION_ID} --paths "/*"
+          invalidation_id=$(aws cloudfront create-invalidation --distribution-id ${CF_DISTRIBUTION_ID} --paths "/*" --query Invalidation.Id)
+          inval_id=$(echo $invalidation_id | tr -d '"')
+          aws cloudfront wait invalidation-completed --distribution-id ${CF_DISTRIBUTION_ID} --id ${inval_id}

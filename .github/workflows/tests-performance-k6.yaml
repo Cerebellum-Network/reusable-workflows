@@ -1,0 +1,43 @@
+name: Run tests
+
+on:
+  workflow_call:
+    inputs:
+      runs-on:
+        required: false
+        description: Platform to execute on
+        type: string
+      file-with-tests-run:
+        required: true
+        description: Which file with tests to run
+        type: string
+      path-to-docker-compose:
+        required: false
+        description: Path to docker-compose with required services
+        type: string
+        default: 'docker-compose.yml'
+
+jobs:
+  test:
+    name: Run performance tests using k6 
+    runs-on: ${{ fromJSON(inputs.runs-on) }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Install docker-compose
+        uses: ndeloof/install-compose-action@v0.0.1
+        with:
+          legacy: true 
+
+      - name: Prepare  environment for test execution
+        uses: isbang/compose-action@v1.4.1
+        with:
+          compose-file: ${{ inputs.path-to-docker-compose }}
+          services: |
+            influxdb
+            grafana
+            server
+
+      - name: Run tests
+        run: docker-compose -f ${{ inputs.path-to-docker-compose }} run --rm k6 run ${{ inputs.file-with-tests-run }}

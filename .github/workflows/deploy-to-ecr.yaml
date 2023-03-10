@@ -7,7 +7,7 @@ on:
         required: true
         description: 'Platform to execute on. Default ["self-hosted", "cere-network-large-workers"]'
         type: string
-        default: '["self-hosted", "cere-network-large-workers"]'
+        default: '["self-hosted", "cere-network-large"]'
 
       aws_account_id:
         required: true

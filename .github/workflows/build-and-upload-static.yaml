@@ -169,7 +169,7 @@ jobs:
     name: Deploy static files
     needs: build-static-files
     if: always() && (needs.build-static-files.result == 'success' || needs.build-static-files.result == 'skipped')
-    runs-on: ${{ fromJSON(inputs.runs-on) }}
+    runs-on: ubuntu-latest
     container:
       image: ${{ inputs.deploy_container }}
     steps:
@@ -201,7 +201,7 @@ jobs:
           S3_BUCKET: ${{ secrets.S3_BUCKET_NAME }}
           CF_DISTRIBUTION_ID: ${{ secrets.CF_DISTRIBUTION_ID }}
         run: |
-          aws s3 sync --metadata-directive="REPLACE" --exclude ".*" build/ s3://${S3_BUCKET}
+          aws s3 sync --metadata-directive="REPLACE" --delete --exclude ".*" build/ s3://${S3_BUCKET}
           invalidation_id=$(aws cloudfront create-invalidation --distribution-id ${CF_DISTRIBUTION_ID} --paths "/*" --query Invalidation.Id)
           inval_id=$(echo $invalidation_id | tr -d '"')
           aws cloudfront wait invalidation-completed --distribution-id ${CF_DISTRIBUTION_ID} --id ${inval_id}

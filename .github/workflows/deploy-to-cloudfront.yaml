@@ -73,6 +73,7 @@ jobs:
     runs-on: ${{ fromJSON(inputs.runs-on) }}
     container:
       image: ${{ inputs.build_container }}
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v3
 
@@ -113,7 +114,8 @@ jobs:
     needs: build
     name: Deploy static files
     if: needs.build.result == 'success' || needs.build.result == 'skipped'
-    runs-on: ${{ fromJSON(inputs.runs-on) }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - name: Restore build
         if: ${{ inputs.build_static_files }}
@@ -146,6 +148,7 @@ jobs:
           aws s3 sync \
             --metadata-directive="REPLACE" \
             --exclude ".*" \
+            --delete \
             ${{ inputs.path_to_static_files_to_upload }}/ s3://${{ inputs.s3_bucket_name }}
 
       - name: Invalidate cache
@@ -154,9 +157,16 @@ jobs:
             aws cloudfront list-distributions \
                 --query 'DistributionList.Items[*].{id:Id,origin:Origins.Items[0].DomainName}[?starts_with(origin, `${{ inputs.s3_bucket_name }}`)].id' \
                 --output text); do 
+            invalidation_id=$(
               aws cloudfront create-invalidation \
                 --distribution-id $id \
-                --paths "/*"
+                --paths "/*" \
+                --query Invalidation.Id \
+                --output text
+            )
+            aws cloudfront wait invalidation-completed \
+              --distribution-id $id \
+              --id ${invalidation_id}
           done
 
     outputs:
@@ -167,6 +177,7 @@ jobs:
     needs: deploy
     name: Send notification to slack
     runs-on: ubuntu-latest
+    timeout-minutes: 1
     steps:
       - uses: rtCamp/action-slack-notify@v2
         env:

@@ -55,7 +55,18 @@ on:
         description: Name of S3 bucket for CloudFront. Defaults to cloudfront_name
         type: string
 
+      s3_delete_enabled:
+        required: false
+        description: Is delete enabled with new deploy to s3
+        type: boolean
+        default: true
+
       send_notification_to_slack:
+        required: false
+        type: boolean
+        default: false
+
+      disable_cache_restoring:
         required: false
         type: boolean
         default: false
@@ -81,6 +92,7 @@ jobs:
         run: ${{ inputs.install_dependencies_command }}
 
       - name: Restore cache
+        if: ${{ !inputs.disable_cache_restoring }}
         uses: actions/cache@v3
         with:
           path: '${{ inputs.client_path }}/node_modules'
@@ -143,10 +155,11 @@ jobs:
 
       - name: Upload files
         run: |
-          aws s3 sync \
-            --metadata-directive="REPLACE" \
-            --exclude ".*" \
-            --delete \
+          args=('--metadata-directive=REPLACE' '--exclude ".*"')
+          if [[ ${{inputs.s3_delete_enabled}} ]]; then
+            args+=('--delete')
+          fi
+          aws s3 sync ${args[@]} \
             ${{ inputs.path_to_static_files_to_upload }}/ s3://${{ inputs.s3_bucket_name }}
 
       - name: Invalidate cache

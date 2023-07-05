@@ -4,6 +4,7 @@ on:
   workflow_call:
     inputs:
       runs-on:
+        required: false
         description: 'Platform to execute on. Default ["self-hosted", "cere-network-large"]'
         type: string
         default: '["self-hosted", "cere-network-large"]'
@@ -43,6 +44,12 @@ on:
         type: string
         default: ${{ github.event.repository.name }}
 
+      custom_tag:
+        required: false
+        description: "Additional custom tag for the built docker image."
+        type: string
+        default: ''
+
     secrets:
       NPM_TOKEN:
         required: false
@@ -56,8 +63,7 @@ jobs:
   deploy-to-ecr:
     name: Build docker image, push to ECR.
     runs-on: ${{ fromJSON(inputs.runs-on) }}
-    outputs:
-      version: ${{ steps.version.outputs.version }}
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v3
 
@@ -78,7 +84,12 @@ jobs:
       - name: Process version
         id: version
         run: |
-          echo "version=${{ inputs.environment }}-${{ github.run_attempt}}-$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
+          echo "image_tag=${{ inputs.environment }}-${{ github.run_attempt}}-$(git rev-parse --short HEAD)" >> "$GITHUB_ENV"
+
+      - name: Custom image tag
+        if: ${{ inputs.custom_tag != '' }}
+        run: |
+          echo "custom_image_full_tag=${{ steps.login-ecr.outputs.registry }}/${{ inputs.repository }}:${{ inputs.custom_tag }}" >> "$GITHUB_ENV"
 
       - name: Build and push docker image to ECR
         uses: docker/build-push-action@v3
@@ -91,4 +102,8 @@ jobs:
             NPM_TOKEN=${{ secrets.NPM_TOKEN }}
             ENV_FILE_NAME=${{ inputs.environment }}
           tags: |
-            ${{ steps.login-ecr.outputs.registry }}/${{ inputs.repository }}:${{ steps.version.outputs.version }}
+            ${{ steps.login-ecr.outputs.registry }}/${{ inputs.repository }}:${{ env.image_tag }}
+            ${{ env.custom_image_full_tag }}
+
+    outputs:
+      version: ${{ env.image_tag }}

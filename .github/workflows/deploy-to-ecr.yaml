@@ -4,8 +4,7 @@ on:
   workflow_call:
     inputs:
       runs-on:
-        required: true
-        description: 'Platform to execute on. Default ["self-hosted", "cere-network-large-workers"]'
+        description: 'Platform to execute on. Default ["self-hosted", "cere-network-large"]'
         type: string
         default: '["self-hosted", "cere-network-large"]'
 
@@ -63,7 +62,7 @@ jobs:
       - uses: actions/checkout@v3
 
       - name: configure aws credentials
-        uses: aws-actions/configure-aws-credentials@v1
+        uses: aws-actions/configure-aws-credentials@v2
         with:
           role-to-assume: arn:aws:iam::${{ inputs.aws_account_id }}:role/github
           role-session-name: ${{ github.event.repository.name }}

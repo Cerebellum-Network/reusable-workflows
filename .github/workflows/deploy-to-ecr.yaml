@@ -60,7 +60,7 @@ on:
         required: false
         description: "Timeout in minutes for the job execution. Defaults 15."
         type: string
-        default: 15
+        default: '15'
 
     secrets:
       NPM_TOKEN:
@@ -79,7 +79,7 @@ jobs:
       contents: read
       id-token: write
 
-    timeout-minutes: ${{ inputs.timeout }}
+    timeout-minutes: 15
 
     steps:
       - uses: actions/checkout@v3

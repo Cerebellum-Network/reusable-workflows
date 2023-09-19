@@ -82,6 +82,8 @@ jobs:
       - name: Install packages
         working-directory: ${{ inputs.client_path }}
         run: ${{ inputs.install_packages_command }}
+        env:
+          NPM_TOKEN: ${{secrets.NPM_TOKEN}}
 
       - name: Configure AWS Credentials
         if: ${{ inputs.inject_ssm_secrets }}

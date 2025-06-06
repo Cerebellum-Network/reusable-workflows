@@ -60,6 +60,12 @@ on:
         description: "Timeout in minutes for the job execution. Defaults 15."
         type: number
         default: 15
+        
+      node_url:
+        required: false
+        description: "Node URL to pass to the docker build."
+        type: string
+        default: ''
 
     secrets:
       NPM_TOKEN:
@@ -128,6 +134,7 @@ jobs:
           build-args: |
             NPM_TOKEN=${{ secrets.NPM_TOKEN }}
             ENV_FILE_NAME=${{ inputs.environment }}
+            NODE_URL=${{ inputs.node_url }}
           tags: |
             ${{ steps.login-ecr.outputs.registry }}/${{ inputs.repository }}:${{ env.image_tag }}
             ${{ env.custom_image_full_tag }}

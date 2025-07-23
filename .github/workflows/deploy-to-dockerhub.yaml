@@ -38,11 +38,12 @@ on:
         type: string
         default: ''
 
-      build-args:
+      build_args:
         required: false
         description: "Additional build arguments for docker build"
         type: string
         default: |
+          NPM_TOKEN=${{ secrets.NPM_TOKEN_READ }}
           ENV_FILE_NAME=${{ inputs.environment }}
 
     secrets:
@@ -94,7 +95,7 @@ jobs:
           platforms	: |
             linux/amd64
             linux/arm64
-          build-args: ${{ inputs.build-args }}
+          build-args: ${{ inputs.build_args }}
           tags: |
             cerebellumnetwork/${{ inputs.repository }}:${{ env.image_tag }}
 

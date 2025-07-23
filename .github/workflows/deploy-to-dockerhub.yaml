@@ -42,8 +42,7 @@ on:
         required: false
         description: "Additional build arguments for docker build"
         type: string
-        default: |
-          ENV_FILE_NAME=${{ inputs.environment }}
+        default: ''
 
     secrets:
       NPM_TOKEN:

@@ -44,6 +44,12 @@ on:
         type: string
         default: ''
 
+      tags:
+        required: false
+        description: "Additional tags to apply to the image"
+        type: string
+        default: ''
+
     secrets:
       NPM_TOKEN:
         required: false
@@ -94,8 +100,7 @@ jobs:
             linux/amd64
             linux/arm64
           build-args: ${{ inputs.build_args }}
-          tags: |
-            cerebellumnetwork/${{ inputs.repository }}:${{ env.image_tag }}
+          tags: ${{ inputs.tags }}
 
     outputs:
       version: ${{ env.image_tag }}

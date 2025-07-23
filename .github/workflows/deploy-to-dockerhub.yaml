@@ -43,7 +43,6 @@ on:
         description: "Additional build arguments for docker build"
         type: string
         default: |
-          NPM_TOKEN=${{ secrets.NPM_TOKEN_READ }}
           ENV_FILE_NAME=${{ inputs.environment }}
 
     secrets:

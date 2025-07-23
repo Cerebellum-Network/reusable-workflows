@@ -37,6 +37,15 @@ on:
         description: "Additional command to configure host"
         type: string
         default: ''
+
+      build-args:
+        required: false
+        description: "Additional build arguments for docker build"
+        type: string
+        default: |
+          NPM_TOKEN=${{ secrets.NPM_TOKEN_READ }}
+          ENV_FILE_NAME=${{ inputs.environment }}
+
     secrets:
       NPM_TOKEN:
         required: false
@@ -86,9 +95,7 @@ jobs:
           platforms	: |
             linux/amd64
             linux/arm64
-          build-args: |
-            NPM_TOKEN=${{ secrets.NPM_TOKEN_READ }}
-            ENV_FILE_NAME=${{ inputs.environment }}
+          build-args: ${{ inputs.build-args }}
           tags: |
             cerebellumnetwork/${{ inputs.repository }}:${{ env.image_tag }}
 

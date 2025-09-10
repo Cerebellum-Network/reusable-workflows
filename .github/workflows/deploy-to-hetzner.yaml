@@ -79,7 +79,9 @@ jobs:
       id-token: write
 
     timeout-minutes: ${{ inputs.timeout }}
-
+    outputs:
+      registry: ${{ steps.get-credentials.outputs.registry }}
+      password: ${{ steps.get-credentials.outputs.password }}
     steps:
       - name: configure aws credentials
         uses: aws-actions/configure-aws-credentials@v2
@@ -93,7 +95,7 @@ jobs:
 #        uses: aws-actions/amazon-ecr-login@v1
 
       - name: get docker credentials
-        id: login-ecr
+        id: get-credentials
         run: |
           REGISTRY="${{ inputs.aws_account_id }}.dkr.ecr.${{ inputs.aws_region }}.amazonaws.com"
           PASS="$(aws ecr get-login-password --region ${{ inputs.aws_region }})"

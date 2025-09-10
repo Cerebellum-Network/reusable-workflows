@@ -92,18 +92,19 @@ jobs:
 #        id: login-ecr
 #        uses: aws-actions/amazon-ecr-login@v1
 
-      - name: print something
+      - name: get docker credentials
         id: login-ecr
         run: |
           REGISTRY="${{ inputs.aws_account_id }}.dkr.ecr.${{ inputs.aws_region }}.amazonaws.com"
           PASS="$(aws ecr get-login-password --region ${{ inputs.aws_region }})"
           echo "::add-mask::$PASS"
-          echo "registry=$REGISTRY" # "$GITHUB_OUTPUT"
-          echo "password=$PASS" # "$GITHUB_OUTPUT"
+          echo "registry=$REGISTRY" >> "$GITHUB_OUTPUT"
+          echo "password=$PASS" >> "$GITHUB_OUTPUT"
       
   deploy-to-hz:
     name: deploy to hetzner
     runs-on: ubuntu-latest
+    needs: get-ecr-credentials
     steps:
       - name: Configure ssh connection
         run: |
@@ -112,8 +113,13 @@ jobs:
         env:
           SSH_AUTH_SOCK: /tmp/ssh_agent.sock
       - name: ssh to vm
-        run: |
-          ssh -oStrictHostKeyChecking=no root@91.98.86.50 hostname
         env:
           SSH_AUTH_SOCK: /tmp/ssh_agent.sock
+          REGISTRY: ${{needs.get-ecr-credentials.outputs.registry}}
+          REGISTRY_PASS: ${{needs.get-ecr-credentials.outputs.password}}
+        run: |
+          ssh -oStrictHostKeyChecking=no root@91.98.86.50 bash <<EOF
+          printf "$REGISTRY_PASS" | docker login --password-stdin "$REGISTRY"
+          docker pull "$REGISTRY:dev-1-fee4fb8"
+          EOF
 

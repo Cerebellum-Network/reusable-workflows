@@ -113,7 +113,7 @@ jobs:
           SSH_AUTH_SOCK: /tmp/ssh_agent.sock
       - name: ssh to vm
         run: |
-          ssh root@91.98.86.50 hostname
+          ssh -oStrictHostKeyChecking=no root@91.98.86.50 hostname
         env:
           SSH_AUTH_SOCK: /tmp/ssh_agent.sock
 

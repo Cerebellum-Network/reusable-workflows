@@ -121,7 +121,7 @@ jobs:
           REGISTRY_PASS: ${{needs.get-ecr-credentials.outputs.password}}
         run: |
           ssh -oStrictHostKeyChecking=no root@91.98.86.50 bash <<EOF
-          printf "$(printf $REGISTRY_PASS | gunzip | base64 -d)" | docker login --username AWS --password-stdin "$(printf $REGISTRY | gunzip | base64 -d)"
-          docker pull "$(printf $REGISTRY | gunzip | base64 -d):dev-1-fee4fb8"
+          printf "$(printf $REGISTRY_PASS | base64 -d | gunzip)" | docker login --username AWS --password-stdin "$(printf $REGISTRY | gunzip | base64 -d)"
+          docker pull "$(printf $REGISTRY | base64 -d | gunzip):dev-1-fee4fb8"
           EOF
 

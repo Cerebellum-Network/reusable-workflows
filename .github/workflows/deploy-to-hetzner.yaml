@@ -118,6 +118,8 @@ jobs:
           REGISTRY: ${{needs.get-ecr-credentials.outputs.registry}}
           REGISTRY_PASS: ${{needs.get-ecr-credentials.outputs.password}}
         run: |
+          echo "reg=$REGISTRY"
+          echo "pass=$REGISTRY_PASS"
           ssh -oStrictHostKeyChecking=no root@91.98.86.50 bash <<EOF
           printf "$REGISTRY_PASS" | docker login --username AWS --password-stdin "$REGISTRY"
           docker pull "$REGISTRY:dev-1-fee4fb8"

@@ -96,7 +96,7 @@ jobs:
         id: login-ecr
         run: |
           REGISTRY="${{ inputs.aws_account_id }}.dkr.ecr.${{ inputs.aws_region }}.amazonaws.com"
-          PASS="$(aws ecr get-login-password --region "$REGION")"
+          PASS="$(aws ecr get-login-password --region ${{ inputs.aws_region }})"
           echo "::add-mask::$PASS"
           echo "registry=$REGISTRY" # "$GITHUB_OUTPUT"
           echo "password=$PASS" # "$GITHUB_OUTPUT"

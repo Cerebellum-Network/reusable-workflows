@@ -126,7 +126,7 @@ jobs:
 
       - name: test
         run: |
-          echo "${{ steps.login-ecr.outputs.registry }}/${{ inputs.repository }}:${{ env.image_tag }}" | base64
+          echo "${{ steps.login-ecr.outputs.registry }}/${{ inputs.repository }}:${{ env.image_tag }}" | gzip | base64
 
       - name: Build and push docker image to ECR
         uses: docker/build-push-action@v3

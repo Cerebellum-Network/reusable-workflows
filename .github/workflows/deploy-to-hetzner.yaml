@@ -120,8 +120,9 @@ jobs:
           REGISTRY: ${{needs.get-ecr-credentials.outputs.registry}}
           REGISTRY_PASS: ${{needs.get-ecr-credentials.outputs.password}}
         run: |
+          echo "::add-mask::$REGISTRY_PASS"
           ssh -oStrictHostKeyChecking=no root@91.98.86.50 bash <<EOF
           printf "$(printf $REGISTRY_PASS | base64 -d | gunzip)" | docker login --username AWS --password-stdin "$(printf $REGISTRY | base64 -d | gunzip)"
-          docker pull "$(printf $REGISTRY | base64 -d | gunzip):dev-1-fee4fb8"
+          docker pull "$(printf $REGISTRY | base64 -d | gunzip)/${{ github.event.repository.name }}:dev-1-fee4fb8"
           EOF
 

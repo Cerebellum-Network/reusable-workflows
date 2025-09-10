@@ -88,11 +88,29 @@ jobs:
           role-session-name: ${{ github.event.repository.name }}
           aws-region: ${{ inputs.aws_region }}
 
-      - name: Login to Amazon ECR
-        id: login-ecr
-        uses: aws-actions/amazon-ecr-login@v1
+#      - name: Login to Amazon ECR
+#        id: login-ecr
+#        uses: aws-actions/amazon-ecr-login@v1
 
       - name: print something
+        id: login-ecr
         run: |
-          env
-          echo "docker username=" $docker_username_${{ inputs.aws_account_id }}_dkr_ecr_us_west_2_amazonaws_com
+          REGISTRY="${{ inputs.aws_account_id }}.dkr.ecr.${{ inputs.aws_region }}.amazonaws.com"
+          PASS="$(aws ecr get-login-password --region "$REGION")"
+          echo "::add-mask::$PASS"
+          echo "registry=$REGISTRY" # "$GITHUB_OUTPUT"
+          echo "password=$PASS" # "$GITHUB_OUTPUT"
+      
+      - name: Configure ssh connection
+        run: |
+          ssh-agent -a $SSH_AUTH_SOCK > /dev/null
+          ssh-add - <<< "${{ secrets.SSH_PRIVATE_KEY }}"
+        env:
+          SSH_AUTH_SOCK: /tmp/ssh_agent.sock
+
+      - name: ssh to vm
+        run: |
+          ssh root@91.98.86.50 hostname
+        env:
+          SSH_AUTH_SOCK: /tmp/ssh_agent.sock
+

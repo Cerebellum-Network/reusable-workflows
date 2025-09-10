@@ -1,0 +1,103 @@
+name: Deploy image from ECR to Hetzner VM
+
+on:
+  workflow_call:
+    inputs:
+      aws_account_id:
+        required: true
+        description: Destination AWS Account
+        type: string
+
+      environment:
+        required: true
+        description: "Build environment, effects image tag prefix."
+        type: string
+
+      runs-on:
+        required: false
+        description: 'Platform to execute on. Default ["self-hosted", "cere-network-large"]'
+        type: string
+        default: '["self-hosted", "cere-network-large"]'
+
+      aws_region:
+        required: false
+        description: "Destination AWS region. Default us-west-2"
+        type: string
+        default: 'us-west-2'
+
+      file:
+        required: false
+        description: "Path to the Dockerfile. Default: ./Dockerfile"
+        type: string
+        default: './Dockerfile'
+
+      context:
+        required: false
+        description: "Build's context. Defaults ./"
+        type: string
+        default: './'
+
+      repository:
+        required: false
+        description: "Image repository. Defaults to github repository name."
+        type: string
+        default: ${{ github.event.repository.name }}
+
+      custom_tag:
+        required: false
+        description: "Additional custom tag for the built docker image."
+        type: string
+        default: ''
+
+      build_artifact:
+        required: false
+        description: "Additional Persistent artifact from another job."
+        type: string
+        default: ''
+
+      timeout:
+        required: false
+        description: "Timeout in minutes for the job execution. Defaults 15."
+        type: number
+        default: 15
+        
+      node_url:
+        required: false
+        description: "Node URL to pass to the docker build."
+        type: string
+        default: ''
+
+    secrets:
+      NPM_TOKEN:
+        required: false
+
+    outputs:
+      version:
+        description: Docker image tag.
+        value: ${{ jobs.deploy-to-ecr.outputs.version }}
+
+jobs:
+  deploy-to-hz:
+    name: Deploy image from ECR to Hetzner VM.
+    runs-on: ${{ fromJSON(inputs.runs-on) }}
+    permissions:
+      contents: read
+      id-token: write
+
+    timeout-minutes: ${{ inputs.timeout }}
+
+    steps:
+      - name: configure aws credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          role-to-assume: arn:aws:iam::${{ inputs.aws_account_id }}:role/github
+          role-session-name: ${{ github.event.repository.name }}
+          aws-region: ${{ inputs.aws_region }}
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v1
+
+      - name: print something
+        run: |
+          echo docker_username_${{ inputs.aws_account_id }}_dkr_ecr_us_west_2_amazonaws_com

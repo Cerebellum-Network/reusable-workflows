@@ -124,10 +124,6 @@ jobs:
         run: |
           echo "custom_image_full_tag=${{ steps.login-ecr.outputs.registry }}/${{ inputs.repository }}:${{ inputs.custom_tag }}" >> "$GITHUB_ENV"
 
-      - name: test
-        run: |
-          echo "${{ steps.login-ecr.outputs.registry }}/${{ inputs.repository }}:${{ env.image_tag }}" | gzip | base64
-
       - name: Build and push docker image to ECR
         uses: docker/build-push-action@v3
         with:

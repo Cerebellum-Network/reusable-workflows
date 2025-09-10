@@ -94,4 +94,5 @@ jobs:
 
       - name: print something
         run: |
-          echo $docker_username_${{ inputs.aws_account_id }}_dkr_ecr_us_west_2_amazonaws_com
+          env
+          echo "docker username=" $docker_username_${{ inputs.aws_account_id }}_dkr_ecr_us_west_2_amazonaws_com

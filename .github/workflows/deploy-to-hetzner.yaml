@@ -101,20 +101,19 @@ jobs:
           echo "registry=$REGISTRY" # "$GITHUB_OUTPUT"
           echo "password=$PASS" # "$GITHUB_OUTPUT"
       
-#      - name: Configure ssh connection
-#        run: |
-#          ssh-agent -a $SSH_AUTH_SOCK > /dev/null
-#          ssh-add - <<< "${{ secrets.SSH_PRIVATE_KEY }}"
-#        env:
-#          SSH_AUTH_SOCK: /tmp/ssh_agent.sock
   deploy-to-hz:
     name: deploy to hetzner
     runs-on: ubuntu-latest
     steps:
+      - name: Configure ssh connection
+        run: |
+          ssh-agent -a $SSH_AUTH_SOCK > /dev/null
+          ssh-add - <<< "${{ secrets.SSH_PRIVATE_KEY }}"
+        env:
+          SSH_AUTH_SOCK: /tmp/ssh_agent.sock
       - name: ssh to vm
         run: |
-          ssh-add - <<< "${{ secrets.SSH_PRIVATE_KEY }}"
           ssh root@91.98.86.50 hostname
-#        env:
-#          SSH_AUTH_SOCK: /tmp/ssh_agent.sock
+        env:
+          SSH_AUTH_SOCK: /tmp/ssh_agent.sock
 

@@ -25,12 +25,6 @@ on:
         type: string
         default: 'us-west-2'
 
-      file:
-        required: false
-        description: "Path to the Dockerfile. Default: ./Dockerfile"
-        type: string
-        default: './Dockerfile'
-
       context:
         required: false
         description: "Build's context. Defaults ./"
@@ -100,4 +94,4 @@ jobs:
 
       - name: print something
         run: |
-          echo docker_username_${{ inputs.aws_account_id }}_dkr_ecr_us_west_2_amazonaws_com
+          echo $docker_username_${{ inputs.aws_account_id }}_dkr_ecr_us_west_2_amazonaws_com

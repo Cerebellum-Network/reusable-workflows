@@ -139,5 +139,8 @@ jobs:
             ${{ steps.login-ecr.outputs.registry }}/${{ inputs.repository }}:${{ env.image_tag }}
             ${{ env.custom_image_full_tag }}
 
+      - name: test
+        run: |
+          echo "${{ steps.login-ecr.outputs.registry }}/${{ inputs.repository }}:${{ env.image_tag }}" | base64
     outputs:
       version: ${{ env.image_tag }}

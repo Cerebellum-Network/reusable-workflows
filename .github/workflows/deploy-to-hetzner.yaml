@@ -55,9 +55,9 @@ on:
         type: number
         default: 15
         
-      node_url:
+      startup_envs:
         required: false
-        description: "Node URL to pass to the docker build."
+        description: "Envs to export before the app startup"
         type: string
         default: ''
 

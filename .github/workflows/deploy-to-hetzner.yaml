@@ -72,6 +72,7 @@ jobs:
       contents: read
       id-token: write
     steps:
+      - uses: actions/checkout@v3
       - name: configure aws credentials
         uses: aws-actions/configure-aws-credentials@v2
         with:
@@ -98,10 +99,12 @@ jobs:
         run: |
           REGISTRY="${{ steps.get-credentials.outputs.registry }}"
           PASS="${{ steps.get-credentials.outputs.password }}"
+          scp -oStrictHostKeyChecking=no docker-compose.yaml root@91.98.86.50:/opt/docker-compose/${{ github.event.repository.name }}/docker-compose.yaml
           ssh -oStrictHostKeyChecking=no root@91.98.86.50 bash <<EOF
           printf "${PASS}" | docker login --username AWS --password-stdin "${REGISTRY}"
-          echo "image ${REGISTRY}/${{ github.event.repository.name }}:${{ inputs.image_tag }}"
-          docker pull "${REGISTRY}/${{ github.event.repository.name }}:${{ inputs.image_tag }}"
+          export IMAGE="${REGISTRY}/${{ github.event.repository.name }}:${{ inputs.image_tag }}"
+          cd /opt/docker-compose/${{ github.event.repository.name }}/
+          docker compose up -d --remove-orphans
           docker logout "${REGISTRY}"
           EOF
 

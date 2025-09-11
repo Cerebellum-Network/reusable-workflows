@@ -100,6 +100,7 @@ jobs:
           PASS="${{ steps.get-credentials.outputs.password }}"
           ssh -oStrictHostKeyChecking=no root@91.98.86.50 bash <<EOF
           printf "${PASS}" | docker login --username AWS --password-stdin "${REGISTRY}"
+          echo "image ${REGISTRY}/${{ github.event.repository.name }}:${{ inputs.image_tag }}"
           docker pull "${REGISTRY}/${{ github.event.repository.name }}:${{ inputs.image_tag }}"
           docker logout "${REGISTRY}"
           EOF

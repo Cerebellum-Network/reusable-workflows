@@ -113,6 +113,7 @@ jobs:
           role-session-name: ${{ github.event.repository.name }}
           aws-region: ${{ inputs.aws_region }}
       - name: get docker credentials
+        run: |
           REGISTRY="${{ inputs.aws_account_id }}.dkr.ecr.${{ inputs.aws_region }}.amazonaws.com"
           PASS="$(aws ecr get-login-password --region ${{ inputs.aws_region }})"
           echo "::add-mask::$PASS"

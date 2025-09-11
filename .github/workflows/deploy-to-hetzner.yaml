@@ -110,7 +110,7 @@ jobs:
     steps:
       - name: Configure ssh connection
         run: |
-          aws ecr get-login-password --region ${{ inputs.aws_region }})"
+          aws ecr get-login-password --region ${{ inputs.aws_region }}
           ssh-agent -a $SSH_AUTH_SOCK > /dev/null
           ssh-add - <<< "${{ secrets.SSH_PRIVATE_KEY }}"
         env:

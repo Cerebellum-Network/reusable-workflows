@@ -113,6 +113,7 @@ jobs:
           role-session-name: ${{ github.event.repository.name }}
           aws-region: ${{ inputs.aws_region }}
       - name: get docker credentials
+        id: get-credentials
         run: |
           REGISTRY="${{ inputs.aws_account_id }}.dkr.ecr.${{ inputs.aws_region }}.amazonaws.com"
           PASS="$(aws ecr get-login-password --region ${{ inputs.aws_region }})"
@@ -129,6 +130,8 @@ jobs:
         env:
           SSH_AUTH_SOCK: /tmp/ssh_agent.sock
         run: |
+          REGISTRY="${{ steps.get-credentials.outputs.registry }}"
+          PASS="${{ steps.get-credentials.outputs.password }}"
           ssh -oStrictHostKeyChecking=no root@91.98.86.50 bash <<EOF
           printf "$PASS" | docker login --username AWS --password-stdin "$REGISTRY"
           docker pull "$REGISTRY/${{ github.event.repository.name }}:dev-1-fee4fb8"

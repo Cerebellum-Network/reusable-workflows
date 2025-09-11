@@ -13,11 +13,11 @@ on:
         description: "Build environment, effects image tag prefix."
         type: string
 
-      runs-on:
-        required: false
-        description: 'Platform to execute on. Default ["self-hosted", "cere-network-large"]'
+      image_tag:
+        required: true
+        description: "Tag for the built docker image."
         type: string
-        default: '["self-hosted", "cere-network-large"]'
+        default: ''
 
       aws_region:
         required: false
@@ -36,12 +36,6 @@ on:
         description: "Image repository. Defaults to github repository name."
         type: string
         default: ${{ github.event.repository.name }}
-
-      custom_tag:
-        required: false
-        description: "Additional custom tag for the built docker image."
-        type: string
-        default: ''
 
       build_artifact:
         required: false
@@ -71,34 +65,6 @@ on:
         value: ${{ jobs.deploy-to-ecr.outputs.version }}
 
 jobs:
-#  get-ecr-credentials:
-#    name: get ecr credentials
-#    runs-on: ${{ fromJSON(inputs.runs-on) }}
-#    permissions:
-#      contents: read
-#      id-token: write
-#
-#    timeout-minutes: ${{ inputs.timeout }}
-#    outputs:
-#      registry: ${{ steps.get-credentials.outputs.registry }}
-#      password: ${{ steps.get-credentials.outputs.password }}
-#    steps:
-#      - name: configure aws credentials
-#        uses: aws-actions/configure-aws-credentials@v2
-#        with:
-#          role-to-assume: arn:aws:iam::${{ inputs.aws_account_id }}:role/github
-#          role-session-name: ${{ github.event.repository.name }}
-#          aws-region: ${{ inputs.aws_region }}
-#
-#      - name: get docker credentials
-#        id: get-credentials
-#        run: |
-#          REGISTRY="${{ inputs.aws_account_id }}.dkr.ecr.${{ inputs.aws_region }}.amazonaws.com"
-#          PASS="$(aws ecr get-login-password --region ${{ inputs.aws_region }})"
-#          echo "::add-mask::$PASS"
-#          echo "registry=$(printf $REGISTRY | gzip | base64 -w0)" >> "$GITHUB_OUTPUT"
-#          echo "password=$(printf $PASS| gzip | base64 -w0)" >> "$GITHUB_OUTPUT"
-      
   deploy-to-hz:
     name: deploy to hetzner
     runs-on: ubuntu-latest
@@ -132,11 +98,9 @@ jobs:
         run: |
           REGISTRY="${{ steps.get-credentials.outputs.registry }}"
           PASS="${{ steps.get-credentials.outputs.password }}"
-          echo "registry $REGISTRY"
-          echo "pass $PASS"
           ssh -oStrictHostKeyChecking=no root@91.98.86.50 bash <<EOF
           printf "${PASS}" | docker login --username AWS --password-stdin "${REGISTRY}"
-          docker pull "${REGISTRY}/${{ github.event.repository.name }}:dev-1-fee4fb8"
+          docker pull "${REGISTRY}/${{ github.event.repository.name }}:${{ inputs.image_tag }}"
           docker logout "${REGISTRY}"
           EOF
 

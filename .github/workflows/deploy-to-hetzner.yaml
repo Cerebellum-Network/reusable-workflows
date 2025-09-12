@@ -111,7 +111,9 @@ jobs:
           printf "${PASS}" | docker login --username AWS --password-stdin "${REGISTRY}"
           export IMAGE="${REGISTRY}/${{ github.event.repository.name }}:${{ inputs.image_tag }}"
           echo "${{ inputs.startup_envs }}"
-          printf "${{ inputs.startup_envs }}" | while read i; do export $i; done
+          while read i; do
+            export "$i"
+          done <<< "${{ inputs.startup_envs }}"
           echo "$VITE_API_BASE_URL"
           cd /opt/docker-compose/${{ github.event.repository.name }}/
           docker compose up -d --remove-orphans --force-recreate

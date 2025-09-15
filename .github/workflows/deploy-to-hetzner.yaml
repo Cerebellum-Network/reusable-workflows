@@ -110,10 +110,9 @@ jobs:
           ssh -oStrictHostKeyChecking=no root@${{ inputs.vm_host }} bash <<EOF
           printf "${PASS}" | docker login --username AWS --password-stdin "${REGISTRY}"
           export IMAGE="${REGISTRY}/${{ github.event.repository.name }}:${{ inputs.image_tag }}"
-          echo "${{ inputs.startup_envs }}"
-          ENVS='${{ inputs.startup_envs }}'
-          for var in $ENVS; do export $var; done
           cd /opt/docker-compose/${{ github.event.repository.name }}/
+          echo "${{ inputs.startup_envs }}"
+          echo '${{ inputs.startup_envs }}' > .env
           docker compose up -d --remove-orphans --force-recreate
           docker logout "${REGISTRY}"
           EOF

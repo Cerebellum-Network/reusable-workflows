@@ -111,7 +111,7 @@ jobs:
           printf "${PASS}" | docker login --username AWS --password-stdin "${REGISTRY}"
           export IMAGE="${REGISTRY}/${{ github.event.repository.name }}:${{ inputs.image_tag }}"
           echo "${{ inputs.startup_envs }}"
-          source < (echo "${{ inputs.startup_envs }}")
+          source < (echo '${{ inputs.startup_envs }}')
           cd /opt/docker-compose/${{ github.event.repository.name }}/
           docker compose up -d --remove-orphans --force-recreate
           docker logout "${REGISTRY}"

@@ -1,0 +1,119 @@
+name: Deploy image from ECR to Hetzner VM
+
+on:
+  workflow_call:
+    inputs:
+      aws_account_id:
+        required: true
+        description: Destination AWS Account
+        type: string
+
+      environment:
+        required: true
+        description: "Build environment, effects image tag prefix."
+        type: string
+
+      image_tag:
+        required: true
+        description: "Tag for the built docker image."
+        type: string
+        default: ''
+
+      vm_host:
+        required: true
+        description: "IP or host of the target VM"
+        type: string
+        default: ''
+
+      aws_region:
+        required: false
+        description: "Destination AWS region. Default us-west-2"
+        type: string
+        default: 'us-west-2'
+
+      context:
+        required: false
+        description: "Build's context. Defaults ./"
+        type: string
+        default: './'
+
+      repository:
+        required: false
+        description: "Image repository. Defaults to github repository name."
+        type: string
+        default: ${{ github.event.repository.name }}
+
+      build_artifact:
+        required: false
+        description: "Additional Persistent artifact from another job."
+        type: string
+        default: ''
+
+      timeout:
+        required: false
+        description: "Timeout in minutes for the job execution. Defaults 15."
+        type: number
+        default: 15
+        
+      startup_envs:
+        required: false
+        description: "Envs to export before the app startup"
+        type: string
+        default: ''
+
+    secrets:
+      NPM_TOKEN:
+        required: false
+
+    outputs:
+      version:
+        description: Docker image tag.
+        value: ${{ jobs.deploy-to-ecr.outputs.version }}
+
+jobs:
+  deploy-to-hz:
+    name: deploy to hetzner
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@v3
+      - name: configure aws credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          role-to-assume: arn:aws:iam::${{ inputs.aws_account_id }}:role/github
+          role-session-name: ${{ github.event.repository.name }}
+          aws-region: ${{ inputs.aws_region }}
+      - name: get docker credentials
+        id: get-credentials
+        run: |
+          REGISTRY="${{ inputs.aws_account_id }}.dkr.ecr.${{ inputs.aws_region }}.amazonaws.com"
+          PASS="$(aws ecr get-login-password --region ${{ inputs.aws_region }})"
+          echo "::add-mask::$PASS"
+          echo "registry=$REGISTRY" >> "$GITHUB_OUTPUT"
+          echo "password=$PASS" >> "$GITHUB_OUTPUT"
+      - name: Configure ssh connection
+        run: |
+          ssh-agent -a $SSH_AUTH_SOCK > /dev/null
+          ssh-add - <<< "${{ secrets.SSH_PRIVATE_KEY }}"
+        env:
+          SSH_AUTH_SOCK: /tmp/ssh_agent.sock
+      - name: ssh to vm
+        env:
+          SSH_AUTH_SOCK: /tmp/ssh_agent.sock
+        run: |
+          REGISTRY="${{ steps.get-credentials.outputs.registry }}"
+          PASS="${{ steps.get-credentials.outputs.password }}"
+          ssh -oStrictHostKeyChecking=no root@${{ inputs.vm_host }} mkdir -p /opt/docker-compose/${{ github.event.repository.name }}
+          scp -oStrictHostKeyChecking=no docker-compose.yml root@${{ inputs.vm_host }}:/opt/docker-compose/${{ github.event.repository.name }}/docker-compose.yaml
+          ssh -oStrictHostKeyChecking=no root@${{ inputs.vm_host }} bash <<EOF
+          printf "${PASS}" | docker login --username AWS --password-stdin "${REGISTRY}"
+          export IMAGE="${REGISTRY}/${{ github.event.repository.name }}:${{ inputs.image_tag }}"
+          cd /opt/docker-compose/${{ github.event.repository.name }}/
+          echo "${{ inputs.startup_envs }}"
+          echo '${{ inputs.startup_envs }}' > .env
+          docker compose up -d --remove-orphans --force-recreate
+          docker logout "${REGISTRY}"
+          EOF
+

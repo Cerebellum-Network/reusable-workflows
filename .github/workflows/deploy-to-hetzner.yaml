@@ -106,7 +106,7 @@ jobs:
           REGISTRY="${{ steps.get-credentials.outputs.registry }}"
           PASS="${{ steps.get-credentials.outputs.password }}"
           ssh -oStrictHostKeyChecking=no root@${{ inputs.vm_host }} mkdir -p /opt/docker-compose/${{ github.event.repository.name }}
-          scp -oStrictHostKeyChecking=no docker-compose.yml root@${{ inputs.vm_host }}:/opt/docker-compose/${{ github.event.repository.name }}/docker-compose.yaml
+          cat docker-compose.yml | envsubst | ssh -oStrictHostKeyChecking=no root@${{ inputs.vm_host }} cat > /opt/docker-compose/${{ github.event.repository.name }}/docker-compose.yaml
           ssh -oStrictHostKeyChecking=no root@${{ inputs.vm_host }} bash <<EOF
           printf "${PASS}" | docker login --username AWS --password-stdin "${REGISTRY}"
           export IMAGE="${REGISTRY}/${{ github.event.repository.name }}:${{ inputs.image_tag }}"

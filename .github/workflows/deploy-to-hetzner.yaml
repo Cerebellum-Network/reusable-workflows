@@ -61,6 +61,12 @@ on:
         type: string
         default: ''
 
+      agent_vars:
+        required: false
+        description: "Env-specific variables for grafana-agent log collector config"
+        type: string
+        default: ''
+
     secrets:
       NPM_TOKEN:
         required: false
@@ -108,7 +114,9 @@ jobs:
           ssh -oStrictHostKeyChecking=no root@${{ inputs.vm_host }} mkdir -p /opt/docker-compose/${{ github.event.repository.name }}
           export IMAGE="${REGISTRY}/${{ github.event.repository.name }}:${{ inputs.image_tag }}"
           export $(printf "${{ inputs.startup_envs }}")
+          export $(printf "${{ inputs.agent_vars }}")
           cat docker-compose.yml | envsubst | ssh -oStrictHostKeyChecking=no root@${{ inputs.vm_host }} "cat > /opt/docker-compose/${{ github.event.repository.name }}/docker-compose.yaml"
+          cat agent.tpl.yaml | envsubst | ssh -oStrictHostKeyChecking=no root@${{ inputs.vm_host }} "cat > /opt/docker-compose/${{ github.event.repository.name }}/agent.yaml"
           ssh -oStrictHostKeyChecking=no root@${{ inputs.vm_host }} bash <<EOF
           printf "${PASS}" | docker login --username AWS --password-stdin "${REGISTRY}"
           export IMAGE="${REGISTRY}/${{ github.event.repository.name }}:${{ inputs.image_tag }}"

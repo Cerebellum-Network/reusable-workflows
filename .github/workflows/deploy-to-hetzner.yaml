@@ -111,13 +111,13 @@ jobs:
         run: |
           REGISTRY="${{ steps.get-credentials.outputs.registry }}"
           PASS="${{ steps.get-credentials.outputs.password }}"
-          SHARED_LOKI_BA_USER="${{ secrets.SHARED_LOKI_BA_USER }}"
-          SHARED_LOKI_BA_PASS="${{ secrets.SHARED_LOKI_BA_PASS }}"
           ssh -oStrictHostKeyChecking=no root@${{ inputs.vm_host }} mkdir -p /opt/docker-compose/${{ github.event.repository.name }}
           export IMAGE="${REGISTRY}/${{ github.event.repository.name }}:${{ inputs.image_tag }}"
           export $(printf "${{ inputs.startup_envs }}")
           export $(printf "${{ inputs.agent_vars }}")
           cat docker-compose.yml | envsubst | ssh -oStrictHostKeyChecking=no root@${{ inputs.vm_host }} "cat > /opt/docker-compose/${{ github.event.repository.name }}/docker-compose.yaml"
+          export SHARED_LOKI_BA_USER="${{ secrets.SHARED_LOKI_BA_USER }}"
+          export SHARED_LOKI_BA_PASS="${{ secrets.SHARED_LOKI_BA_PASS }}"
           cat agent.tpl.yaml | envsubst | ssh -oStrictHostKeyChecking=no root@${{ inputs.vm_host }} "cat > /opt/docker-compose/${{ github.event.repository.name }}/agent.yaml"
           ssh -oStrictHostKeyChecking=no root@${{ inputs.vm_host }} bash <<EOF
           printf "${PASS}" | docker login --username AWS --password-stdin "${REGISTRY}"

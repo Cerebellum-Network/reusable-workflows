@@ -97,12 +97,8 @@ jobs:
           REGISTRY="${{ inputs.aws_account_id }}.dkr.ecr.${{ inputs.aws_region }}.amazonaws.com"
           PASS="$(aws ecr get-login-password --region ${{ inputs.aws_region }})"
           echo "::add-mask::$PASS"
-          echo "::add-mask::$HARED_LOKI_BA_USER"
-          echo "::add-mask::$SHARED_LOKI_BA_PASS"
           echo "registry=$REGISTRY" >> "$GITHUB_OUTPUT"
           echo "password=$PASS" >> "$GITHUB_OUTPUT"
-          echo "shared_loki_ba_user=$SHARED_LOKI_BA_USER" >> "$GITHUB_OUTPUT"
-          echo "shared_loki_ba_pass=$SHARED_LOKI_BA_PASS" >> "$GITHUB_OUTPUT"
       - name: Configure ssh connection
         run: |
           ssh-agent -a $SSH_AUTH_SOCK > /dev/null
@@ -115,8 +111,8 @@ jobs:
         run: |
           REGISTRY="${{ steps.get-credentials.outputs.registry }}"
           PASS="${{ steps.get-credentials.outputs.password }}"
-          SHARED_LOKI_BA_USER="${{ steps.get-credentials.outputs.shared_loki_ba_user }}"
-          SHARED_LOKI_BA_PASS="${{ steps.get-credentials.outputs.shared_loki_ba_pass }}"
+          SHARED_LOKI_BA_USER="${{ secrets.SHARED_LOKI_BA_USER }}"
+          SHARED_LOKI_BA_PASS="${{ secrets.SHARED_LOKI_BA_PASS }}"
           ssh -oStrictHostKeyChecking=no root@${{ inputs.vm_host }} mkdir -p /opt/docker-compose/${{ github.event.repository.name }}
           export IMAGE="${REGISTRY}/${{ github.event.repository.name }}:${{ inputs.image_tag }}"
           export $(printf "${{ inputs.startup_envs }}")

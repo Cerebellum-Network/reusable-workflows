@@ -116,6 +116,8 @@ jobs:
           export $(printf "${{ inputs.startup_envs }}")
           export $(printf "${{ inputs.agent_vars }}")
           cat docker-compose.yml | envsubst | ssh -oStrictHostKeyChecking=no root@${{ inputs.vm_host }} "cat > /opt/docker-compose/${{ github.event.repository.name }}/docker-compose.yaml"
+          export SHARED_PROM_BA_USER="${{ secrets.SHARED_PROM_BA_USER }}"
+          export SHARED_PROM_BA_PASS="${{ secrets.SHARED_PROM_BA_PASS }}"
           export SHARED_LOKI_BA_USER="${{ secrets.SHARED_LOKI_BA_USER }}"
           export SHARED_LOKI_BA_PASS="${{ secrets.SHARED_LOKI_BA_PASS }}"
           cat agent.tpl.yaml | envsubst | ssh -oStrictHostKeyChecking=no root@${{ inputs.vm_host }} "cat > /opt/docker-compose/${{ github.event.repository.name }}/agent.yaml"

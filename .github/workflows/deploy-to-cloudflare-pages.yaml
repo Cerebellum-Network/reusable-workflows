@@ -1,0 +1,161 @@
+name: Deploy to Cloudflare Pages
+
+on:
+  workflow_call:
+    inputs:
+      project_name:
+        required: true
+        description: Cloudflare Pages project name
+        type: string
+
+      build_container:
+        required: true
+        description: Base image to build
+        type: string
+
+      runs-on:
+        required: false
+        description: 'Platform to execute on. Default ["self-hosted", "cere-network-large"]'
+        type: string
+        default: '["self-hosted", "cere-network-large"]'
+
+      build_static_files:
+        required: false
+        default: true
+        description: Build static files?
+        type: boolean
+
+      install_dependencies_command:
+        required: false
+        type: string
+
+      install_packages_command:
+        required: false
+        description: Command to install packages
+        type: string
+
+      build_command:
+        required: false
+        description: Build command
+        type: string
+
+      path_to_static_files_to_upload:
+        required: false
+        default: "build"
+        description: Path to files to upload
+        type: string
+
+      client_path:
+        required: false
+        default: "."
+        type: string
+
+      send_notification_to_slack:
+        required: false
+        type: boolean
+        default: false
+
+      disable_cache_restoring:
+        required: false
+        type: boolean
+        default: false
+
+    secrets:
+      CLOUDFLARE_API_TOKEN:
+        required: true
+      CLOUDFLARE_ACCOUNT_ID:
+        required: true
+      NPM_TOKEN:
+        required: false
+      SLACK_WEBHOOK:
+        required: false
+
+jobs:
+  build:
+    if: ${{ inputs.build_static_files }}
+    name: Build static files
+    runs-on: ${{ fromJSON(inputs.runs-on) }}
+    container:
+      image: ${{ inputs.build_container }}
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Install system packages
+        run: ${{ inputs.install_dependencies_command }}
+
+      - name: Restore cache
+        if: ${{ !inputs.disable_cache_restoring }}
+        uses: actions/cache@v3
+        with:
+          path: '${{ inputs.client_path }}/node_modules'
+          key: ${{ runner.os }}-modules-${{ hashFiles('${{ inputs.client_path }}/yarn.lock') }}
+
+      - name: Install packages
+        working-directory: ${{ inputs.client_path }}
+        run: ${{ inputs.install_packages_command }}
+        env:
+          NPM_TOKEN: ${{secrets.NPM_TOKEN}}
+
+      - name: Build
+        working-directory: ${{ inputs.client_path }}
+        env:
+          CI: false
+          NPM_TOKEN: ${{secrets.NPM_TOKEN}}
+        run: ${{ inputs.build_command }}
+
+      - name: Zip artifacts
+        uses: montudor/action-zip@v1
+        with:
+          args: zip -qq -r artifacts.zip ${{ inputs.path_to_static_files_to_upload }}
+
+      - name: Prepare artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: build
+          path: ${{ github.workspace }}/artifacts.zip
+
+  deploy:
+    needs: build
+    name: Deploy static files
+    if: needs.build.result == 'success' || needs.build.result == 'skipped'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Restore build
+        if: ${{ inputs.build_static_files }}
+        uses: actions/download-artifact@v4
+        with:
+          name: build
+          path: artifacts
+
+      - name: Unzip artifacts
+        if: ${{ inputs.build_static_files }}
+        uses: montudor/action-zip@v1
+        with:
+          args: unzip -qq artifacts/artifacts.zip
+
+      - name: Checkout repository
+        if: ${{ !inputs.build_static_files }}
+        uses: actions/checkout@v3
+
+      - name: Deploy to Cloudflare Pages
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: pages deploy ${{ inputs.path_to_static_files_to_upload }} --project-name=${{ inputs.project_name }} --branch=main
+
+  slack_notify:
+    if: ${{ inputs.send_notification_to_slack }}
+    needs: deploy
+    name: Send notification to slack
+    runs-on: ubuntu-latest
+    timeout-minutes: 1
+    steps:
+      - uses: rtCamp/action-slack-notify@v2
+        env:
+          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
+          SLACK_USERNAME: 'GITHUB_ACTIONS'
+          SLACK_ICON: 'https://github.com/cere-io/reusable-workflows/raw/master/Documentation/logo.ico'
+          SLACK_FOOTER: ''
